@@ -406,12 +406,18 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
         scheduled_req_ids = scheduler_output.num_scheduled_tokens.keys()
         cached_req_ids = self.input_batch.req_id_to_index.keys()
         unscheduled_req_ids = cached_req_ids - scheduled_req_ids
+        # logger.info(f"len(scheduled_req_ids): {len(scheduled_req_ids)}")
+        # logger.info(f"len(cached_req_ids): {len(cached_req_ids)}")
+        # logger.info(f"len(unscheduled_req_ids): {len(unscheduled_req_ids)}")
         # NOTE(woosuk): The persistent batch optimization assumes that
         # consecutive batches contain mostly the same requests. If batches
         # have low request overlap (e.g., alternating between two distinct
         # sets of requests), this optimization becomes very inefficient.
         for req_id in unscheduled_req_ids:
+            # logger.info(f"Removing request {req_id} from the persistent batch.")
             self.input_batch.remove_request(req_id)
+
+        self.input_batch.condense()
 
         req_ids_to_add: list[str] = []
         # Add new requests to the cached states.

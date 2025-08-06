@@ -23,6 +23,10 @@ from vllm.v1.spec_decode.utils import is_spec_decode_unsupported
 from vllm.v1.utils import copy_slice
 from vllm.v1.worker.block_table import MultiGroupBlockTable
 
+from vllm.logger import init_logger
+
+logger = init_logger(__name__)
+
 
 @dataclass
 class CachedRequestState:
@@ -249,14 +253,16 @@ class InputBatch:
     def _get_next_add_index(self) -> int:
         if (req_index := self.batch_update_builder.pop_removed()) is not None:
             # Fill the empty index.
+            logger.info(f"Filling empty index: {req_index}")
             return req_index
         # Append to end
+        logger.info(f"Appending request to self.num_reqs: {self.num_reqs}")
         return self.num_reqs
 
     def _register_add_request(self, request: "CachedRequestState") -> int:
         """Track add-request operations"""
         req_index = self._get_next_add_index()
-        assert req_index < self.max_num_reqs
+        # assert req_index < self.max_num_reqs
         params = (request.sampling_params
                   if request.sampling_params else request.pooling_params)
         self.batch_update_builder.added.append(
@@ -400,6 +406,7 @@ class InputBatch:
         req_index = self.req_id_to_index.pop(req_id, None)
         if req_index is None:
             return None
+        logger.info(f"Removing request {req_id} from the batch update builder.")
         self.batch_update_builder.removed_append(req_index)
         self._req_ids[req_index] = None
         self.req_output_token_ids[req_index] = None

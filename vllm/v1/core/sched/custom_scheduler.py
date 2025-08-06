@@ -24,7 +24,7 @@ from vllm.v1.core.sched.interface import SchedulerInterface
 from vllm.v1.core.sched.output import (CachedRequestData, NewRequestData,
                                        SchedulerOutput)
 from vllm.v1.core.sched.request_queue import (SchedulingPolicy,
-                                              create_request_queue)
+                                              create_request_queue, RequestQueue)
 from vllm.v1.core.sched.utils import check_stop
 from vllm.v1.engine import (EngineCoreEventType, EngineCoreOutput,
                             EngineCoreOutputs)
@@ -107,8 +107,8 @@ class PriorityV1Scheduler(SchedulerInterface):
             raise ValueError(
                 f"Unknown scheduling policy: {self.scheduler_config.policy}")
         # Priority queues for requests.
-        self.waiting = create_request_queue(self.policy)
-        self.running = create_request_queue(self.policy)
+        self.waiting: RequestQueue = create_request_queue(self.policy)
+        self.running: RequestQueue = create_request_queue(self.policy)
 
         # The request IDs that are finished in between the previous and the
         # current steps. This is used to notify the workers about the finished
@@ -199,21 +199,22 @@ class PriorityV1Scheduler(SchedulerInterface):
         # For logging.
         scheduled_timestamp = time.monotonic()
 
-        # TODO: Check if request in wait queue is higher priority than running requests, if so, preempt the lowest-priority request.
+        # Initially: Check if request in wait queue is higher priority than running requests, if so, preempt the lowest-priority request.
         if self.policy == SchedulingPolicy.PRIORITY and len(self.waiting) > 0:
             reversed_running = reversed(self.running)
             for request in reversed_running:
                 if request.priority > self.waiting.peek_request().priority:
-                    preempted_req = self.running.pop()
                     self.running.remove_request(request)
                     self.waiting.add_request(request)
+                    request.status = RequestStatus.RUNNING_PREEMPTED
+                    logger.info(f"Preempting request {request.request_id} because it has lower priority than the request in the wait queue.")
                 else:
                     break
 
         # First, schedule the RUNNING requests.
-        req_index = 0
-        while req_index < len(self.running) and token_budget > 0:
-            request = self.running[req_index]
+        for req_index, request in enumerate(self.running):
+            if token_budget <= 0:
+                break
 
             num_new_tokens = (request.num_tokens_with_spec +
                               request.num_output_placeholders -
@@ -252,7 +253,6 @@ class PriorityV1Scheduler(SchedulerInterface):
                 # NOTE(woosuk): Here, by doing `continue` instead of `break`,
                 # we do not strictly follow the FCFS scheduling policy and
                 # allow the lower-priority requests to be scheduled.
-                req_index += 1
                 continue
 
             while True:
@@ -268,9 +268,9 @@ class PriorityV1Scheduler(SchedulerInterface):
                             self.running,
                             key=lambda r: (r.priority, r.arrival_time),
                         )
-                        self.running.remove(preempted_req)
+                        self.running.remove_request(preempted_req)
                     else:
-                        preempted_req = self.running.pop()
+                        preempted_req = self.running.pop_request()
 
                     self.kv_cache_manager.free(preempted_req)
                     preempted_req.status = RequestStatus.PREEMPTED
@@ -305,7 +305,6 @@ class PriorityV1Scheduler(SchedulerInterface):
                 new_blocks.get_block_ids())
             num_scheduled_tokens[request.request_id] = num_new_tokens
             token_budget -= num_new_tokens
-            req_index += 1
 
             # Speculative decode related.
             if request.spec_token_ids:
@@ -338,18 +337,13 @@ class PriorityV1Scheduler(SchedulerInterface):
         # Use a temporary RequestQueue to collect requests that need to be
         # skipped and put back at the head of the waiting queue later
         skipped_waiting_requests = create_request_queue(self.policy)
+        
+        req_index = len(self.running)
 
         # Next, schedule the WAITING requests.
-        if not preempted_reqs:
+        if not preempted_reqs or self.policy == SchedulingPolicy.PRIORITY:
             while self.waiting and token_budget > 0:
                 if len(self.running) == self.max_num_running_reqs:
-                    # TODO: Check if request in wait queue is higher priority than running requests, if so, preempt the lowest-priority request.
-                    # if self.waiting.peek_request().priority < self.running[0].priority:
-                    #     # Preempt the lowest-priority request.
-                    #     preempted_req = max(
-                    #         self.running,
-                    #         key=lambda r: (r.priority, r.arrival_time),
-                    #     )
                     break
 
                 request = self.waiting.peek_request()
@@ -492,7 +486,7 @@ class PriorityV1Scheduler(SchedulerInterface):
                     structured_output_request_ids[request.request_id] = (
                         req_index)
                 req_index += 1
-                self.running.append(request)
+                self.running.add_request(request)
                 if self.log_stats:
                     request.record_event(EngineCoreEventType.SCHEDULED,
                                          scheduled_timestamp)
@@ -500,6 +494,8 @@ class PriorityV1Scheduler(SchedulerInterface):
                     scheduled_new_reqs.append(request)
                 elif request.status == RequestStatus.PREEMPTED:
                     scheduled_resumed_reqs.append(request)
+                elif request.status == RequestStatus.RUNNING_PREEMPTED:
+                    scheduled_running_reqs.append(request)
                 else:
                     raise RuntimeError(
                         f"Invalid request status: {request.status}")
@@ -544,7 +540,7 @@ class PriorityV1Scheduler(SchedulerInterface):
         num_common_prefix_blocks = [0] * len(
             self.kv_cache_config.kv_cache_groups)
         if self.running:
-            any_request = self.running[0]
+            any_request = self.running.peek_request()
             num_common_prefix_blocks = (
                 self.kv_cache_manager.get_num_common_prefix_blocks(
                     any_request, len(self.running)))
@@ -894,9 +890,7 @@ class PriorityV1Scheduler(SchedulerInterface):
 
         # Remove the stopped requests from the running and waiting queues.
         if stopped_running_reqs:
-            self.running = [
-                req for req in self.running if req not in stopped_running_reqs
-            ]
+            self.running.remove_requests(stopped_running_reqs)
         if stopped_preempted_reqs:
             # This is a rare case and unlikely to impact performance.
             self.waiting.remove_requests(stopped_preempted_reqs)
@@ -1015,7 +1009,7 @@ class PriorityV1Scheduler(SchedulerInterface):
 
         # Remove all requests from queues at once for better efficiency
         for request in running_requests_to_remove:
-            self.running.remove(request)
+            self.running.remove_request(request)
         if waiting_requests_to_remove:
             self.waiting.remove_requests(waiting_requests_to_remove)
 
