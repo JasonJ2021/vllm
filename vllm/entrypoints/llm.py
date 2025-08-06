@@ -411,6 +411,7 @@ class LLM:
         use_tqdm: Union[bool, Callable[..., tqdm]] = True,
         lora_request: Optional[Union[list[LoRARequest], LoRARequest]] = None,
         priority: Optional[list[int]] = None,
+        group_tag: Optional[list[str]] = None,
     ) -> list[RequestOutput]:
         """Generates the completions for the input prompts.
 
@@ -484,6 +485,7 @@ class LLM:
             lora_request=lora_request,
             tokenization_kwargs=tokenization_kwargs,
             priority=priority,
+            group_tag=group_tag,
         )
 
         outputs = self._run_engine(use_tqdm=use_tqdm)
@@ -1615,6 +1617,7 @@ class LLM:
         lora_request: Optional[Union[Sequence[LoRARequest], LoRARequest]],
         tokenization_kwargs: Optional[dict[str, Any]] = None,
         priority: Optional[list[int]] = None,
+        group_tag: Optional[list[str]] = None,
     ) -> None:
         if isinstance(prompts, (str, dict)):
             # Convert a single prompt to a list.
@@ -1648,6 +1651,7 @@ class LLM:
                 lora_request=lora_request[i] if isinstance(
                     lora_request, Sequence) else lora_request,
                 priority=priority[i] if priority else 0,
+                group_tag=group_tag[i] if group_tag else 'default',
             )
 
     def _add_request(
@@ -1657,6 +1661,7 @@ class LLM:
         tokenization_kwargs: Optional[dict[str, Any]] = None,
         lora_request: Optional[LoRARequest] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> None:
         request_id = str(next(self.request_counter))
         self.llm_engine.add_request(
@@ -1666,6 +1671,7 @@ class LLM:
             lora_request=lora_request,
             tokenization_kwargs=tokenization_kwargs,
             priority=priority,
+            group_tag=group_tag,
         )
 
     def _run_engine(

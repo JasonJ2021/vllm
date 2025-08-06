@@ -33,6 +33,7 @@ class RPCProcessRequest:
     lora_request: Optional[LoRARequest] = None
     trace_headers: Optional[Mapping[str, str]] = None
     priority: int = 0
+    group_tag: str = 'default'
 
     def __init__(
         self,
@@ -42,6 +43,7 @@ class RPCProcessRequest:
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> None:
         super().__init__()
 
@@ -51,6 +53,7 @@ class RPCProcessRequest:
         self.lora_request = lora_request
         self.trace_headers = trace_headers
         self.priority = priority
+        self.group_tag = group_tag
 
 
 @dataclass

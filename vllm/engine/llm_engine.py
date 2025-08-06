@@ -545,6 +545,7 @@ class LLMEngine:
         lora_request: Optional[LoRARequest],
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> Optional[SequenceGroup]:
         """Add a processed request to the engine's request pool.
         return the created sequence group.
@@ -559,6 +560,7 @@ class LLMEngine:
                 lora_request=lora_request,
                 trace_headers=trace_headers,
                 priority=priority,
+                group_tag=group_tag,
             )
             return None
 
@@ -586,7 +588,9 @@ class LLMEngine:
                 lora_request=lora_request,
                 trace_headers=trace_headers,
                 encoder_seq=encoder_seq,
-                priority=priority)
+                priority=priority,
+                group_tag=group_tag,
+            )
         elif isinstance(params, PoolingParams):
             seq_group = self._create_sequence_group_with_pooling(
                 request_id,
@@ -595,7 +599,9 @@ class LLMEngine:
                 arrival_time=arrival_time,
                 lora_request=lora_request,
                 encoder_seq=encoder_seq,
-                priority=priority)
+                priority=priority,
+                group_tag=group_tag,
+            )
         else:
             raise ValueError(
                 "Either SamplingParams or PoolingParams must be provided.")
@@ -623,6 +629,7 @@ class LLMEngine:
         tokenization_kwargs: Optional[dict[str, Any]] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> None:
         """Add a request to the engine's request pool.
 
@@ -711,6 +718,7 @@ class LLMEngine:
             lora_request=lora_request,
             trace_headers=trace_headers,
             priority=priority,
+            group_tag=group_tag,
         )
 
     def _create_sequence_group_with_sampling(
@@ -723,6 +731,7 @@ class LLMEngine:
         trace_headers: Optional[Mapping[str, str]] = None,
         encoder_seq: Optional[Sequence] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> SequenceGroup:
         """Creates a SequenceGroup with SamplingParams."""
         max_logprobs = self.get_model_config().max_logprobs
@@ -756,7 +765,9 @@ class LLMEngine:
                                   trace_headers=trace_headers,
                                   encoder_seq=encoder_seq,
                                   priority=priority,
-                                  draft_size=draft_size)
+                                  draft_size=draft_size,
+                                  group_tag=group_tag,
+                                  )
 
         return seq_group
 
@@ -769,6 +780,7 @@ class LLMEngine:
         lora_request: Optional[LoRARequest],
         encoder_seq: Optional[Sequence] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> SequenceGroup:
         """Creates a SequenceGroup with PoolingParams."""
         # Defensive copy of PoolingParams, which are used by the pooler
@@ -780,7 +792,9 @@ class LLMEngine:
                                   lora_request=lora_request,
                                   pooling_params=pooling_params,
                                   encoder_seq=encoder_seq,
-                                  priority=priority)
+                                  priority=priority,
+                                  group_tag=group_tag,
+                                  )
         return seq_group
 
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:

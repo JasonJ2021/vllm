@@ -320,7 +320,8 @@ class MQLLMEngine:
                                     params=request.params,
                                     lora_request=request.lora_request,
                                     trace_headers=request.trace_headers,
-                                    priority=request.priority)
+                                    priority=request.priority,
+                                    group_tag=request.group_tag)
 
             if self.log_requests:
                 logger.info("Added request %s.", request.request_id)

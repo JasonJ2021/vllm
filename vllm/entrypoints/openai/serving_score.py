@@ -107,6 +107,7 @@ class ServingScores(OpenAIServing):
                     lora_request=lora_request,
                     trace_headers=trace_headers,
                     priority=request.priority,
+                    group_tag=request.group_tag,
                 ))
 
         result_generator = merge_async_iterators(*generators)
@@ -264,6 +265,7 @@ class ServingScores(OpenAIServing):
                 lora_request=lora_request,
                 trace_headers=trace_headers,
                 priority=request.priority,
+                group_tag=request.group_tag,
             )
 
             generators.append(generator)

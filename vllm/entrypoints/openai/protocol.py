@@ -290,6 +290,13 @@ class ResponsesRequest(OpenAIBaseModel):
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
     )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
+    )
     cache_salt: Optional[str] = Field(
         default=None,
         description=(
@@ -530,6 +537,13 @@ class ChatCompletionRequest(OpenAIBaseModel):
             "The priority of the request (lower means earlier handling; "
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
+    )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
     )
     request_id: str = Field(
         default_factory=lambda: f"{random_uuid()}",
@@ -1016,6 +1030,13 @@ class CompletionRequest(OpenAIBaseModel):
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
     )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
+    )
     request_id: str = Field(
         default_factory=lambda: f"{random_uuid()}",
         description=(
@@ -1267,6 +1288,13 @@ class EmbeddingCompletionRequest(OpenAIBaseModel):
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
     )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
+    )
     request_id: str = Field(
         default_factory=lambda: f"{random_uuid()}",
         description=(
@@ -1325,6 +1353,13 @@ class EmbeddingChatRequest(OpenAIBaseModel):
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
     )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
+    )
     request_id: str = Field(
         default_factory=lambda: f"{random_uuid()}",
         description=(
@@ -1374,6 +1409,13 @@ class ScoreRequest(OpenAIBaseModel):
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
     )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
+    )
 
     # --8<-- [end:score-extra-params]
 
@@ -1401,6 +1443,13 @@ class RerankRequest(OpenAIBaseModel):
             "The priority of the request (lower means earlier handling; "
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
+    )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
     )
 
     # --8<-- [end:rerank-extra-params]
@@ -1551,6 +1600,13 @@ class ClassificationRequest(OpenAIBaseModel):
             "The priority of the request (lower means earlier handling; "
             "default: 0). Any priority other than 0 will raise an error "
             "if the served model does not use priority scheduling."),
+    )
+    group_tag: str = Field(
+        default="default",
+        description=(
+            "The group tag of the request (default: 'default'). "
+            "Any group tag other than 'default' will raise an error "
+            "if the served model does not use group tag scheduling."),
     )
 
     # --8<-- [end:classification-extra-params]

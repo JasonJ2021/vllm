@@ -36,10 +36,12 @@ class Request:
         structured_output_request: Optional["StructuredOutputRequest"] = None,
         cache_salt: Optional[str] = None,
         priority: int = 0,
+        group_tag: str = "default",
     ) -> None:
         self.request_id = request_id
         self.client_index = client_index
         self.priority = priority
+        self.group_tag = group_tag
         self.sampling_params = sampling_params
         self.pooling_params = pooling_params
         # Because of LoRA, the eos token id can be different for each request.
@@ -132,6 +134,7 @@ class Request:
                     if request.sampling_params else None,
             cache_salt=request.cache_salt,
             priority=request.priority,
+            group_tag=request.group_tag,
         )
 
     def append_output_token_ids(

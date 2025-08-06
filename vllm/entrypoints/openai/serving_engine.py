@@ -359,6 +359,7 @@ class OpenAIServing:
                     lora_request=ctx.lora_request,
                     trace_headers=trace_headers,
                     priority=getattr(ctx.request, "priority", 0),
+                    group_tag=getattr(ctx.request, "group_tag", "default"),
                 )
 
                 generators.append(generator)

@@ -563,6 +563,10 @@ class PriorityV1Scheduler(SchedulerInterface):
             scheduled_spec_decode_tokens,
             req_to_new_block_ids,
         )
+
+        # for req in scheduled_new_reqs:
+        #     logger.info(f"req.group_tag: {req.group_tag}")
+
         scheduler_output = SchedulerOutput(
             scheduled_new_reqs=new_reqs_data,
             scheduled_cached_reqs=cached_reqs_data,

@@ -432,6 +432,7 @@ class _AsyncLLMEngine(LLMEngine):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
         data_parallel_rank: Optional[int] = None,
         tokenization_kwargs: Optional[dict[str, Any]] = None,
     ) -> None:
@@ -474,6 +475,7 @@ class _AsyncLLMEngine(LLMEngine):
             lora_request=lora_request,
             trace_headers=trace_headers,
             priority=priority,
+            group_tag=group_tag,
         )
 
     async def check_health_async(self) -> None:
@@ -806,6 +808,7 @@ class AsyncLLMEngine(EngineClient):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
         data_parallel_rank: Optional[int] = None,
         tokenization_kwargs: Optional[dict[str, Any]] = None,
     ) -> AsyncGenerator[Union[RequestOutput, PoolingRequestOutput], None]:
@@ -833,6 +836,7 @@ class AsyncLLMEngine(EngineClient):
             lora_request=lora_request,
             trace_headers=trace_headers,
             priority=priority,
+            group_tag=group_tag,
             data_parallel_rank=data_parallel_rank,
             tokenization_kwargs=tokenization_kwargs,
         )
@@ -847,6 +851,7 @@ class AsyncLLMEngine(EngineClient):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
         data_parallel_rank: Optional[int] = None,
     ) -> AsyncGenerator[RequestOutput, None]:
         """Generate outputs for a request.
@@ -923,6 +928,7 @@ class AsyncLLMEngine(EngineClient):
                     lora_request=lora_request,
                     trace_headers=trace_headers,
                     priority=priority,
+                    group_tag=group_tag,
                     data_parallel_rank=data_parallel_rank,
             ):
                 yield LLMEngine.validate_output(output, RequestOutput)
@@ -938,6 +944,7 @@ class AsyncLLMEngine(EngineClient):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
         tokenization_kwargs: Optional[dict[str, Any]] = None,
     ) -> AsyncGenerator[PoolingRequestOutput, None]:
         """Generate outputs for a request from a pooling model.
@@ -1013,6 +1020,7 @@ class AsyncLLMEngine(EngineClient):
                     lora_request=lora_request,
                     trace_headers=trace_headers,
                     priority=priority,
+                    group_tag=group_tag,
                     tokenization_kwargs=tokenization_kwargs,
             ):
                 yield LLMEngine.validate_output(output, PoolingRequestOutput)

@@ -178,6 +178,7 @@ class OpenAIServingResponses(OpenAIServing):
                     lora_request=lora_request,
                     trace_headers=trace_headers,
                     priority=request.priority,
+                    group_tag=request.group_tag,
                 )
                 generators.append(generator)
         except ValueError as e:

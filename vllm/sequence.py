@@ -716,7 +716,8 @@ class SequenceGroup:
                  encoder_seq: Optional[Sequence] = None,
                  trace_headers: Optional[Mapping[str, str]] = None,
                  priority: int = 0,
-                 draft_size: int = 1) -> None:
+                 draft_size: int = 1,
+                 group_tag: str = 'default') -> None:
         self.request_id = request_id
         self.seqs = seqs
         self.first_seq = seqs[0]
@@ -739,6 +740,7 @@ class SequenceGroup:
         self.encoder_seq = encoder_seq
         self.trace_headers = trace_headers
         self.priority = priority
+        self.group_tag = group_tag
 
         self.cached_request_output = None
 
@@ -1492,6 +1494,7 @@ class ParallelSampleSequenceGroup(SequenceGroupBase):
             encoder_seq=seq_group.encoder_seq,
             trace_headers=seq_group.trace_headers,
             priority=seq_group.priority,
+            group_tag=seq_group.group_tag,
         )
 
         group.streaming = params.output_kind == RequestOutputKind.DELTA

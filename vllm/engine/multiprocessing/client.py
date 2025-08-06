@@ -454,6 +454,7 @@ class MQLLMEngineClient(EngineClient):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> AsyncGenerator[RequestOutput, None]:
         """Generate outputs for a request.
 
@@ -476,7 +477,8 @@ class MQLLMEngineClient(EngineClient):
         return cast(
             AsyncGenerator[RequestOutput, None],
             self._process_request(prompt, sampling_params, request_id,
-                                  lora_request, trace_headers, priority))
+                                  lora_request, trace_headers, priority,
+                                  group_tag))
 
     def encode(
         self,
@@ -486,6 +488,7 @@ class MQLLMEngineClient(EngineClient):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> AsyncGenerator[PoolingRequestOutput, None]:
         """Generate outputs for a request from a pooling model.
 
@@ -513,7 +516,8 @@ class MQLLMEngineClient(EngineClient):
                                   request_id,
                                   lora_request,
                                   trace_headers,
-                                  priority=priority))
+                                  priority=priority,
+                                  group_tag=group_tag))
 
     async def _process_request(
         self,
@@ -523,6 +527,7 @@ class MQLLMEngineClient(EngineClient):
         lora_request: Optional[LoRARequest] = None,
         trace_headers: Optional[Mapping[str, str]] = None,
         priority: int = 0,
+        group_tag: str = 'default',
     ) -> Union[AsyncGenerator[RequestOutput, None], AsyncGenerator[
             PoolingRequestOutput, None]]:
         """Send an RPCGenerateRequest to the RPCServer and stream responses."""
@@ -560,6 +565,7 @@ class MQLLMEngineClient(EngineClient):
                     lora_request=lora_request,
                     trace_headers=trace_headers,
                     priority=priority,
+                    group_tag=group_tag,
                 ))
 
             # 3) Send the RPCGenerateRequest to the MQLLMEngine.
