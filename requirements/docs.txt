@@ -12,6 +12,7 @@ regex
 ruff
 
 # Required for argparse hook only
+-f https://download.pytorch.org/whl/cpu
 cachetools
 cbor2
 cloudpickle
@@ -24,5 +25,6 @@ psutil
 pybase64
 pydantic
 setproctitle
+torch
 transformers
 zmq
