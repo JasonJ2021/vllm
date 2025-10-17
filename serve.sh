@@ -1,7 +1,7 @@
 #!/bin/bash
 # --preemption-mode recompute \
 # General Options
-vllm serve "Qwen/Qwen2.5-7B-Instruct"  \
+vllm serve "Qwen/Qwen3-8B"  \
     --port 8423 \
     --disable-log-requests \
     --max-num-seqs 2 \
